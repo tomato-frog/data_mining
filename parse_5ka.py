@@ -54,22 +54,22 @@ def parse_categories(url):
         return data
 
 
-def segregateProducts(category, products):
+def segregate_products(category, products):
     params = f"?categories={category['parent_group_code']}"
     url = f"{start_url}{params}"
     category['products'] = list(parse_products(url))
     return category
 
 
-def saveJson(filepath: Path, data):
+def save_json(filepath: Path, data):
     filepath.write_text(json.dumps(data, ensure_ascii=False))
 
 
 def main():
     for category in parse_categories(categories_url):
-        saveJson(
+        save_json(
             Path(f"{category['parent_group_name']}.json"),
-            segregateProducts(
+            segregate_products(
                 category,
                 parse_products(start_url)
             )
