@@ -27,18 +27,28 @@ headers = {
 
 
 def get_response(url, requests_headers):
-    response = requests.get(url, headers=requests_headers)
     while True:
+        response = requests.get(url, headers=requests_headers)
         if response.status_code == 200:
+            print(f'successful request to {url}!!!')
             return response
+        else:
+            print(f'unsuccessful request to {url}, repeating...')
         time.sleep(0.5)
 
 
 def parse_products(url, category=None):
+    print(f'parsing products for {category}...')
     next_url = url
     while next_url:
+        next_url = next_url.replace('monolith', urlparse(url).netloc)
+        category_params = ""
+
+        if category is not None and len(urlparse(next_url).query) == 0:
+            category_params = f"?categories={category}"
+
         response = get_response(
-            next_url.replace('monolith', urlparse(url).netloc),
+            f"{next_url}{category_params}",
             headers
         )
         data = response.json()
@@ -48,20 +58,19 @@ def parse_products(url, category=None):
 
 
 def parse_categories(url):
-    while url:
-        response = get_response(url, headers)
-        data = response.json()
-        return data
+    print('parsing new category...')
+    response = get_response(url, headers)
+    data = response.json()
+    return data
 
 
 def segregate_products(category, products):
-    params = f"?categories={category['parent_group_code']}"
-    url = f"{start_url}{params}"
-    category['products'] = list(parse_products(url))
+    category['products'] = list(products)
     return category
 
 
 def save_json(filepath: Path, data):
+    print(f'saving to file {filepath}...')
     filepath.write_text(json.dumps(data, ensure_ascii=False))
 
 
@@ -71,7 +80,7 @@ def main():
             Path(f"{category['parent_group_name']}.json"),
             segregate_products(
                 category,
-                parse_products(start_url)
+                parse_products(start_url, category['parent_group_code'])
             )
         )
 
