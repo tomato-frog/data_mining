@@ -43,45 +43,44 @@ def get_soup(url):
 
 def get_pages_amount(url):
     soup = get_soup(url)
-    pagination = soup.find('ul', attrs={'class': 'gb__pagination'})
-    links = pagination.find_all('a')
+    links = soup.select('.gb__pagination a')
     pages_amount = int(links[-2].text)
     return pages_amount
 
 
-def get_posts_links(page: int):
-    page_link = f'{start_url}?page={page}'
+def get_posts_links(url, page: int):
+    page_link = f'{url}?page={page}'
     soup = get_soup(page_link)
-    post_item_events = soup.find_all('div', attrs={'class': 'post-item event'})
+    post_item_events = soup.select('.post-item.event')
     for post_item_event in post_item_events:
         yield urljoin(start_url, post_item_event.find('a', href=True).get('href'))
 
 
 def get_post_info(url):
     soup = get_soup(url)
-    author_tag = soup.find('div', attrs={'itemprop': 'author'})
-    first_img = soup.find("div", attrs={"class": "blogpost-content"}).find("img")
+    author_tag = soup.select_one('[itemprop="author"]')
+    first_img = soup.select_one('.blogpost-content img')
 
     data = {
         'url': url,
         'title': soup
-            .find('h1', attrs={'class': 'blogpost-title'})
+            .select_one('.blogpost-title')
             .text,
+
         'first_picture_link': first_img.attrs.get('src') if first_img else None,
 
         'date_of_publishing': soup
-            .find('div', attrs={'class': 'blogpost-date-views'})
-            .find('time')
+            .select_one('.blogpost-date-views > time')
             .attrs['datetime'],
 
         'author_name': author_tag.text,
-        'author_url': urljoin(url, author_tag.parent.attrs.get("href")),
+        'author_url': urljoin(url, author_tag.parent.attrs.get('href')),
     }
     return data
 
 
-def parse_posts(page):
-    for link in (get_posts_links(page)):
+def parse_posts(url, page):
+    for link in (get_posts_links(url, page)):
         yield get_post_info(link)
 
 
@@ -92,7 +91,7 @@ def save_to_mongodb(post_info):
 
 def main():
     for page in range(get_pages_amount(start_url)):
-        for post in (list(parse_posts(page))):
+        for post in (list(parse_posts(start_url, page))):
             save_to_mongodb(post)
 
 
