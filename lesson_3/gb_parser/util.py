@@ -21,7 +21,7 @@ async def get_response(url):
     while True:
         response = await do_async(requests.get, url)
 
-        if response.status_code == 200:
+        if response.status_code < 400:
             return response
 
         await sleep(2)

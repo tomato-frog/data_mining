@@ -30,11 +30,17 @@ def process_comments(comments, session):
             id=comment['user']['id'],
         )
 
-        yield get_by_id(
+        session.add(author)
+
+        comment_instance = get_by_id(
             Comment,
             session,
             **comment,
             author=author,
         )
+
+        session.add(comment_instance)
+
+        yield comment_instance
 
         yield from process_comments(comment['children'], session)

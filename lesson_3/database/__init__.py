@@ -31,6 +31,8 @@ class Database:
                     post_data['tags']
                 )
 
+                session.add(author)
+
                 post.author = author
                 post.tags.extend(tags)
                 post.comments.extend(process_comments(
