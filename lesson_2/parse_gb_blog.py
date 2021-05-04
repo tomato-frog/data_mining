@@ -10,6 +10,7 @@
 - комментарии в виде (автор комментария и текст комментария)
 Структуру сохраняем в MongoDB
 """
+from time import time
 import pymongo
 import requests
 import bs4
@@ -26,6 +27,10 @@ def comments_url(post_id):
 
 
 ######
+
+
+def calc_time(start_time):
+    return f' {"{:.1f}".format(time() - start_time)} seconds'
 
 
 def do_async(f, *args):
@@ -100,29 +105,35 @@ async def parse_posts(url, page):
     ]
 
 
-def save_to_mongodb(post_info):
+def save_to_mongodb(posts):
     collection = client['gb']['gb_blog']
-    collection.insert_one(post_info)
+    collection.insert_many(posts)
 
 
 async def main():
-    posts_parsed = 0
-
     print('Parsing amount of pages...')
     pages = await get_pages_amount(start_url)
 
-    print('Parsing post links from', pages, 'pages...')
+    print('Parsing post links from', pages, 'pages...', end='')
+    start_time = time()
     posts_per_page = await gather(*[
         parse_posts(start_url, page)
         for page in range(pages)
     ])
+    print(calc_time(start_time))
 
-    print('Parsing posts from', pages, 'pages...')
-    for posts in posts_per_page:
-        for post in await gather(*posts):
-            save_to_mongodb(post)
-            posts_parsed += 1
-            print('\rParsed', posts_parsed, 'posts from', pages, 'pages', end='')
+    total_posts = 0
+
+    print('Parsing posts from', pages, 'pages...', end='')
+    start_time = time()
+    for future_posts in posts_per_page:
+        posts = await gather(*future_posts)
+        total_posts += len(posts)
+        save_to_mongodb(posts)
+        print('\rSaved', total_posts, 'posts to database...', end='')
+
+    print('\rSaved', total_posts, 'posts to database in', calc_time(start_time))
+
 
 try:
     run(main())
