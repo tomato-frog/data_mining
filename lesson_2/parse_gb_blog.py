@@ -21,7 +21,8 @@ start_url = 'https://gb.ru/posts'
 
 
 def comments_url(post_id):
-    return f'https://gb.ru/api/v2/comments?commentable_type=Post&commentable_id={post_id}&order=desc'
+    return f'https://gb.ru/api/v2/comments' \
+           f'?commentable_type=Post&commentable_id={post_id}&order=desc'
 
 
 ######
@@ -38,7 +39,7 @@ async def get_response(url):
         if response.status_code == 200:
             return response
 
-        await sleep(0.5)
+        await sleep(2)
 
 
 async def get_soup(url):
