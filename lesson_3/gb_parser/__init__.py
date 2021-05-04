@@ -1,3 +1,4 @@
+from asyncio import gather
 from urllib.parse import urljoin
 
 from .util import get_soup, gather_nested, get_response
@@ -27,12 +28,14 @@ async def parse_post_links(url, page: int):
     ]
 
 
-async def parse_post(url):
+async def parse_post(url, cb):
     soup = await get_soup(url)
     author_tag = soup.select_one('[itemprop="author"]')
     first_img = soup.select_one('.blogpost-content img')
     id_element = soup.select_one('.referrals-social-buttons-small-wrapper')
     post_id = id_element.attrs.get('data-minifiable-id')
+
+    cb()
 
     return {
         'id': post_id,
@@ -68,17 +71,20 @@ async def parse_comments(post_id):
     return response.json()
 
 
-async def parse_posts(url, page):
+async def parse_posts(url, page, cb):
     return [
-        parse_post(link)
+        parse_post(link, cb)
         for link in await parse_post_links(url, page)
     ]
 
 
-async def parse_gb_blog(url):
+async def parse_gb_blog(url, cb):
     pages = await parse_pages_amount(url)
 
-    return await gather_nested(
-        parse_posts(url, page)
+    posts_per_pages = await gather(*[
+        parse_posts(url, page, cb)
         for page in range(pages)
-    )
+    ])
+
+    for posts in posts_per_pages:
+        yield gather(*posts)
