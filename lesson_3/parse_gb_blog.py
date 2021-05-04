@@ -1,7 +1,7 @@
 from asyncio import run
 
-from .database import Database
-from .gb_parser import parse_gb_blog, blog_url
+from lesson_3.database import Database
+from lesson_3.gb_parser import parse_gb_blog, blog_url
 
 
 if __name__ == '__main__':
