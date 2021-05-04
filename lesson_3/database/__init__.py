@@ -1,3 +1,5 @@
+import warnings
+from sqlalchemy import exc as sa_exc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker as create_session
@@ -18,32 +20,35 @@ class Database:
         self.Session = create_session(self.engine)
 
     def insert_posts(self, posts):
-        with self.Session() as session:
-            for post_data in posts:
-                post = get_by_id(
-                    Post,
-                    session,
-                    **post_data
-                )
-                author = get_by_id(Author, session, **post_data['author'])
-                tags = map(
-                    lambda tag: get_by_url(Tag, session, **tag),
-                    post_data['tags']
-                )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=sa_exc.SAWarning)
 
-                session.add(author)
+            with self.Session() as session:
+                for post_data in posts:
+                    post = get_by_id(
+                        Post,
+                        session,
+                        **post_data
+                    )
+                    author = get_by_id(Author, session, **post_data['author'])
+                    tags = map(
+                        lambda tag: get_by_url(Tag, session, **tag),
+                        post_data['tags']
+                    )
 
-                post.author = author
-                post.tags.extend(tags)
-                post.comments.extend(process_comments(
-                    post_data['comments'],
-                    session
-                ))
+                    session.add(author)
 
-                session.add(post)
+                    post.author = author
+                    post.tags.extend(tags)
+                    post.comments.extend(process_comments(
+                        post_data['comments'],
+                        session
+                    ))
 
-            try:
-                session.commit()
-            except IntegrityError as error:
-                print(error)
-                session.rollback()
+                    session.add(post)
+
+                try:
+                    session.commit()
+                except IntegrityError as error:
+                    print(error)
+                    session.rollback()

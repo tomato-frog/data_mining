@@ -86,5 +86,8 @@ async def parse_gb_blog(url, cb):
         for page in range(pages)
     ])
 
-    for posts in posts_per_pages:
-        yield gather(*posts)
+    def parse_blog_posts():
+        for posts in posts_per_pages:
+            yield gather(*posts)
+
+    return parse_blog_posts()
