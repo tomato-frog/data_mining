@@ -80,5 +80,5 @@ async def parse_gb_blog(url):
 
     return await gather_nested(
         parse_posts(url, page)
-        for page in range(2)
+        for page in range(pages)
     )
