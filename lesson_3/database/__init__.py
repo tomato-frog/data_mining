@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker as create_session
-from .util import get_instance_by, get_by_id, process_comments
+from .util import get_instance_by, get_by_id, process_comments, get_by_url
 from .models import (
     Base,
     Post,
@@ -27,7 +27,7 @@ class Database:
                 )
                 author = get_by_id(Author, session, **post_data['author'])
                 tags = map(
-                    lambda tag: get_instance_by('url')(Tag, session, **tag),
+                    lambda tag: get_by_url(Tag, session, **tag),
                     post_data['tags']
                 )
 
@@ -38,9 +38,10 @@ class Database:
                     session
                 ))
 
-                try:
-                    session.add(post)
-                    session.commit()
-                except IntegrityError as error:
-                    print(error)
-                    session.rollback()
+                session.add(post)
+
+            try:
+                session.commit()
+            except IntegrityError as error:
+                print(error)
+                session.rollback()

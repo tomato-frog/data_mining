@@ -5,31 +5,36 @@ from .models import (
 
 
 def get_instance_by(filter_field):
-    def get_instance(model, session, **data):
-        return session.query(model).filter_by(filter_field=data[filter_field]).first()\
-               or model(**data)
+    def get_instance(Model, session, **data):
+        instance = session.query(Model).filter_by(**{filter_field: data[filter_field]}).first()
+
+        return instance or Model(**data)
 
     return get_instance
 
 
 get_by_id = get_instance_by('id')
+get_by_url = get_instance_by('url')
 
 
 def process_comments(comments, session):
-    for comment in comments:
+    for comment in map(
+        lambda item: item['comment'],
+        comments
+    ):
         author = get_by_id(
             Author,
             session,
-            name=comment['comment']['user']['full_name'],
-            url=comment['comment']['user']['url'],
-            id=comment['comment']['user']['id'],
+            name=comment['user']['full_name'],
+            url=comment['user']['url'],
+            id=comment['user']['id'],
         )
 
         yield get_by_id(
             Comment,
             session,
-            **comment['comment'],
+            **comment,
             author=author,
         )
 
-        yield from process_comments(comment['comment']['children'], session)
+        yield from process_comments(comment['children'], session)

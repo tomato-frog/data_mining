@@ -21,12 +21,6 @@ tag_post = Table(
     Column('post_id', Integer, ForeignKey('post.id')),
     Column('tag_id', Integer, ForeignKey('tag.id'))
 )
-comment_post = Table(
-    'comment_post',
-    Base.metadata,
-    Column('post_id', Integer, ForeignKey('post.id')),
-    Column('comment_id', Integer, ForeignKey('comment.id'))
-)
 
 
 class Post(Base, WithId, WithUrl):
@@ -45,11 +39,14 @@ class Post(Base, WithId, WithUrl):
         Integer, ForeignKey('author.id'), nullable=True
     )
 
-    author = relationship('Author', backref='posts')
-    tags = relationship('Tag', secondary=tag_post, backref='posts')
-    comments = relationship('Comment', secondary=comment_post, backref='posts')
+    author = relationship('Author', foreign_keys=[author_id], backref='posts')
+    tags = relationship('Tag', secondary=tag_post)
 
     def __init__(self, **kwargs):
+        self.id = kwargs['id']
+        self.title = kwargs['title']
+        self.url = kwargs['url']
+        self.first_picture_link = kwargs['first_picture_link']
         self.date_of_publishing = dt.fromisoformat(kwargs['date_of_publishing'])
 
 
@@ -81,7 +78,7 @@ class Comment(Base):
     author = relationship("Author", backref="comments")
     time_now = Column(DateTime)
     post_id = Column(Integer, ForeignKey("post.id"))
-    post = relationship(Post, secondary=comment_post, backref="comments")
+    post = relationship(Post, backref="comments")
 
     def __init__(self, **kwargs):
         self.id = kwargs["id"]

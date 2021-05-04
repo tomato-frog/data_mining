@@ -6,4 +6,4 @@ class WithId:
 
 
 class WithUrl:
-    url = Column(String, unique=True, nullable=False)
+    url = Column(String, nullable=False)

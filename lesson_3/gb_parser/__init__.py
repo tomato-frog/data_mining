@@ -35,7 +35,7 @@ async def parse_post(url):
     post_id = id_element.attrs.get('data-minifiable-id')
 
     return {
-        'gb_id': post_id,
+        'id': post_id,
         'url': url,
         'title': soup
             .select_one('.blogpost-title')
@@ -48,6 +48,7 @@ async def parse_post(url):
             .attrs['datetime'],
 
         'author': {
+            'id': int(author_tag.parent.attrs.get('href').split('/')[-1]),
             'name': author_tag.text,
             'url': urljoin(url, author_tag.parent.attrs.get('href')),
         },
@@ -79,5 +80,5 @@ async def parse_gb_blog(url):
 
     return await gather_nested(
         parse_posts(url, page)
-        for page in range(pages)
+        for page in range(2)
     )
