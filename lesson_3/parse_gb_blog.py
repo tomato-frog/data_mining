@@ -32,7 +32,11 @@ async def main():
         times.append((time() - start_time)/30)
         print(f'\rSaved {total_posts} posts...', end='')
 
-    print('Done!\nAverage time per post:', sum(times) / len(times), 'seconds')
+    print(
+        'Done!\nAverage time per post:',
+        '{:.2f}'.format(sum(times) / len(times)),
+        'seconds'
+    )
 
 if __name__ == '__main__':
     run(main())
