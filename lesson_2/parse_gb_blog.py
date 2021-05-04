@@ -20,6 +20,10 @@ client = pymongo.MongoClient()
 start_url = 'https://gb.ru/posts'
 
 
+def comments_url(post_id):
+    return f'https://gb.ru/api/v2/comments?commentable_type=Post&commentable_id={post_id}&order=desc'
+
+
 ######
 
 
@@ -66,8 +70,11 @@ async def get_post_info(url):
     soup = await get_soup(url)
     author_tag = soup.select_one('[itemprop="author"]')
     first_img = soup.select_one('.blogpost-content img')
+    id_element = soup.select_one('.referrals-social-buttons-small-wrapper')
+    post_id = id_element.attrs.get('data-minifiable-id')
 
     return {
+        'id': post_id,
         'url': url,
         'title': soup
             .select_one('.blogpost-title')
@@ -81,6 +88,7 @@ async def get_post_info(url):
 
         'author_name': author_tag.text,
         'author_url': urljoin(url, author_tag.parent.attrs.get('href')),
+        'comments': (await get_response(comments_url(post_id))).json()
     }
 
 
