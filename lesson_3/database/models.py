@@ -49,6 +49,9 @@ class Post(Base, WithId, WithUrl):
     tags = relationship('Tag', secondary=tag_post, backref='posts')
     comments = relationship('Comment', secondary=comment_post, backref='posts')
 
+    def __init__(self, **kwargs):
+        self.date_of_publishing = dt.fromisoformat(kwargs['date_of_publishing'])
+
 
 class Author(Base, WithId, WithUrl):
     __tablename__ = "author"
