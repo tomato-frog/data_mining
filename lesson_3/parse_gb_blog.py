@@ -1,18 +1,22 @@
-from asyncio import get_event_loop
+from asyncio import get_event_loop, gather, as_completed
 from signal import SIGINT, SIGTERM
 from time import time
 
 from lesson_3.database import Database
 from lesson_3.gb_parser import parse_gb_blog, blog_url
 
-total_posts = 0
+parsed_posts = 0
 saved_posts = 0
 
 
+def stats():
+    return f'Parsed: {parsed_posts} | Saved: {saved_posts}'
+
+
 def increment_total():
-    global total_posts
-    total_posts += 1
-    print(f'\rSaving {total_posts} posts...', end='')
+    global parsed_posts
+    parsed_posts += 1
+    print(f'\r{stats()}', end='')
 
 
 async def main():
@@ -28,16 +32,16 @@ async def main():
     print(f'\rParsed blog in {"{:.2f}".format(time() - t)} sec')
 
     print('Parsing posts...')
-    for future_posts in blog:
+    for future_post in blog:
         start_time = time()
-        posts = await future_posts
+        posts = [await future_post]
         database.insert_posts(posts)
-        times.append((time() - start_time)/30)
+        times.append((time() - start_time)/len(posts))
         saved_posts += len(posts)
-        print(f'\rSaved {total_posts} posts...', end='')
+        print(f'\r{stats()}', end='')
 
     print(
-        'Done!\nAverage time per post:',
+        '\nDone!\nAverage time per post:',
         '{:.2f}'.format(sum(times) / len(times)),
         'sec'
     )

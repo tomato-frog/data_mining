@@ -1,7 +1,7 @@
-from asyncio import gather
+from asyncio import gather, as_completed
 from urllib.parse import urljoin
 
-from .util import get_soup, gather_nested, get_response
+from .util import get_soup, gather_nested, get_response, flatten
 
 blog_url = 'https://gb.ru/posts'
 
@@ -88,6 +88,6 @@ async def parse_gb_blog(url, cb):
 
     def parse_blog_posts():
         for posts in posts_per_pages:
-            yield gather(*posts)
+            yield from as_completed(posts)
 
     return parse_blog_posts()
