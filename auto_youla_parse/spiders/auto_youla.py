@@ -7,7 +7,6 @@ class AutoYoulaSpider(scrapy.Spider):
     allowed_domains = ['auto.youla.ru']
     start_urls = ['https://auto.youla.ru/']
 
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.db_client = pymongo.MongoClient()
